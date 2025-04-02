@@ -1,0 +1,175 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<title>Small Happiness Club</title>
+		<meta charset="utf-8">
+		<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<link rel="stylesheet" href="static/assets/css/main.css">
+		<link rel="icon" type="image/png" href="static/images/logo.png">
+	</head>
+	<body>
+		<!-- Header -->
+		<header id="header" class="alt">
+			<div class="logo"><a href="/">Small Happiness Club</a></div>
+			<a href="#menu">Menu</a>
+		</header>
+		<!-- Nav -->
+		<nav id="menu">
+			<ul class="links">
+				<li><a href="/">Home</a></li>
+				<li><a href="/contact">Contact</a></li>
+				{% if user %}
+					<li><span class="welcome-text">Welcome, {{ user.first_name }}!</span></li>
+					<li><a href="/profile" class="button special">Profile</a></li>
+					<li><a href="/logout" class="button alt">Logout</a></li>
+				{% else %}
+					<li><a href="/login" class="button special">Login</a></li>
+					<li><a href="/signup" class="button alt">Sign Up</a></li>
+				{% endif %}
+			</ul>
+		</nav>
+		<!-- Banner -->
+		<section class="banner full">
+			<article>
+				<img src="static/images/slide01.jpg" alt="" width="1440" height="961">
+				<div class="inner">
+					<header>
+						<p>Participate in enjoyable group activities and community gatherings to maintain relationships with like-minded people.</p>
+						<h2>Social Events</h2>
+					</header>
+				</div>
+			</article>
+			<article>
+				<img src="static/images/slide02.jpg" alt="" width="1440" height="961">
+				<div class="inner">
+					<header>
+						<p>Participate in exercise programs, yoga courses, and meditation workshops to stay energized and active.</p>
+						<h2>Health and Wellbeing</h2>
+					</header>
+				</div>
+			</article>
+			<article>
+				<img src="static/images/slide03.jpg" alt="" width="1440" height="962">
+				<div class="inner">
+					<header>
+						<p>Explore your artistic side via painting, dancing, singing, and interactive programs designed for elderly citizens.</p>
+						<h2>Learning & Creative Arts</h2>
+					</header>
+				</div>
+			</article>
+			<article>
+				<img src="static/images/slide04.jpg" alt="" width="1440" height="961">
+				<div class="inner">
+					<header>
+						<p>Attend sessions taught by experts on technology, personal development, health, and finance to increase your knowledge.</p>
+						<h2>Informative Discussions</h2>
+					</header>
+				</div>
+			</article>
+			<article>
+				<img src="static/images/slide05.jpg" alt="" width="1440" height="962">
+				<div class="inner">
+					<header>
+						<p>With our carefully thought-out excursions, visit museums, historical sites, and nature paths.</p>
+						<h2>Local Travel</h2>
+					</header>
+				</div>
+			</article>
+		</section>
+		<!-- One -->
+		<section id="one" class="wrapper style2">
+			<div class="inner">
+				<div class="grid-style">
+					<div>
+						<div class="box">
+							<div class="image fit">
+								<img src="static/images/pic02.jpg" alt="" width="600" height="300">
+							</div>
+							<div class="content">
+								<header class="align-center">
+									<h2>What We Do</h2>
+								</header>
+								<p>By providing a variety of interesting activities catered to various interests and lifestyles, Senior activities Hub unites a thriving senior community. We want you to maintain your mental acuity, physical health, and social life.
+
+									We make sure that every program is entertaining and enriching, from fitness classes and educational opportunities to cultural excursions.
+									</p>
+								<footer class="align-center"><a href="/contact" class="button alt">Connect With Us</a>
+								</footer>
+							</div>
+						</div>
+					</div>
+					<div>
+						<div class="box">
+							<div class="image fit">
+								<img src="static/images/pic01.jpg" alt="" width="600" height="300">
+							</div>
+							<div class="content">
+								<header class="align-center">
+									<h2>About Us</h2>
+								</header>
+								<p> Small Happiness Club was created with the mission to provide seniors across the U.S. with meaningful experiences that enrich their lives. We believe that age is just a number, and staying socially and mentally engaged leads to a fulfilling life. Our team works tirelessly to organize diverse events that cater to various interests, ensuring there's something for everyone.</p>
+								<footer class="align-center"><a href="/contact" class="button alt">Learn More</a>
+								</footer>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</section>
+		<!-- Two -->
+		<section id="two" class="wrapper style3">
+			<div class="inner">
+				<header class="align-center">
+					<h2>Welcome to Small Happiness Club – Stay Active, Stay Connected!
+					</h2>
+				</header>
+			</div>
+		</section>
+		<!-- Three -->
+		<section id="three" class="wrapper style2">
+			<div class="inner">
+				<header class="align-center">
+					<p class="special">Explore fascinating events across the US that have been particularly selected for seniors. We have something for everyone, whether you're searching for wellness activities, educational programs, or social events.</p>
+				</header>
+				<div class="gallery">
+					<div>
+						<div class="image fit">
+							<img src="static/images/pic03.jpg" alt="" width="600" height="300">
+						</div>
+					</div>
+					<div>
+						<div class="image fit">
+							<img src="static/images/pic05.jpg" alt="" width="600" height="300">
+						</div>
+					</div>
+					<div>
+						<div class="image fit">
+							<img src="static/images/pic06.jpg" alt="" width="600" height="300">
+						</div>
+					</div>
+					<div>
+						<div class="image fit">
+							<img src="static/images/pic04.jpg" alt="" width="600" height="300">
+						</div>
+					</div>
+				</div>
+			</div>
+		</section>
+		<!-- Footer -->
+		<footer id="footer">
+			<div class="container">
+				<ul class="icons"><ul class="icons">
+					<li><a href="https://www.instagram.com/small_happinessclub?igsh=MWV2YmYzcGwwZW9jbA==" class="icon fa-instagram"><span class="label">Instagram</span></a></li>
+					<li><a href="mailto:info@smallhappiness.com" class="icon fa-envelope-o"><span class="label">Email</span></a></li>
+				</ul>
+				</ul>
+			</div>
+		</footer>
+		<div class="copyright">
+			© 2025 <a href="/">Small Happiness Club </a> All Rights Reserved
+		</div>
+		<!-- Scripts -->
+		<script src="static/assets/js/jquery.min.js"></script><script src="static/assets/js/jquery.scrollex.min.js"></script><script src="static/assets/js/skel.min.js"></script><script src="static/assets/js/util.js"></script><script src="static/assets/js/main.js"></script>
+	</body>
+</html>

@@ -1,0 +1,86 @@
+<!DOCTYPE HTML>
+<html>
+    <head>
+        <title>Sign Up - Small Happiness Club</title>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="static/assets/css/main.css">
+        <link rel="icon" type="image/png" href="static/images/logo.png">
+    </head>
+    <body class="subpage">
+        <!-- Header -->
+        <header id="header">
+            <div class="logo"><a href="/">Small Happiness Club</a></div>
+            <a href="#menu">Menu</a>
+        </header>
+        
+        <!-- Nav -->
+        <nav id="menu">
+            <ul class="links">
+                <li><a href="/">Home</a></li>
+                <li><a href="/contact">Contact</a></li>
+                <li><a href="/login" class="button special">Login</a></li>
+                <li><a href="/signup" class="button alt">Sign Up</a></li>
+            </ul>
+        </nav>
+
+        <!-- Main -->
+        <section id="main" class="wrapper style2">
+            <div class="inner">
+                <div class="box">
+                    <div class="content">
+                        <header class="align-center">
+                            <h2>Sign Up</h2>
+                            <p>Join Small Happiness Club</p>
+                        </header>
+                        {% if error %}
+                        <div class="error-message" style="color: red; margin-bottom: 1em;">
+                            {{ error }}
+                        </div>
+                        {% endif %}
+                        <form method="post" action="/signup">
+                            <div class="row uniform">
+                                <div class="6u 12u$(xsmall)">
+                                    <input type="text" name="first_name" id="first_name" value="" placeholder="First Name" required>
+                                </div>
+                                <div class="6u$ 12u$(xsmall)">
+                                    <input type="text" name="last_name" id="last_name" value="" placeholder="Last Name" required>
+                                </div>
+                                <div class="12u$">
+                                    <input type="email" name="email" id="email" value="" placeholder="Email" required>
+                                </div>
+                                <div class="12u$">
+                                    <input type="password" name="password" id="password" value="" placeholder="Password" required>
+                                    <small style="color: #666;">Password must be at least 6 characters long</small>
+                                </div>
+                                <div class="12u$">
+                                    <input type="password" name="confirm_password" id="confirm_password" value="" placeholder="Confirm Password" required>
+                                </div>
+                                <div class="12u$">
+                                    <ul class="actions">
+                                        <li><input type="submit" value="Sign Up"></li>
+                                    </ul>
+                                </div>
+                                <div class="12u$">
+                                    <p>Already have an account? <a href="/login">Login here</a></p>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer id="footer">
+            <!-- ... existing footer code ... -->
+        </footer>
+        
+        <!-- Scripts -->
+        <script src="static/assets/js/jquery.min.js"></script>
+        <script src="static/assets/js/jquery.scrollex.min.js"></script>
+        <script src="static/assets/js/skel.min.js"></script>
+        <script src="static/assets/js/util.js"></script>
+        <script src="static/assets/js/main.js"></script>
+    </body>
+</html> 
