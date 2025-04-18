@@ -1,250 +1,144 @@
-from fastapi import FastAPI, Request, Depends, HTTPException, status, Form
+from fastapi import FastAPI, Request, HTTPException
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
-import logging
-from auth import AuthHandler, get_current_user
-from contact_handler import ContactHandler
-import config
+import json
+import os
+import requests
 
-# Set up logging from central config
-config.setup_logging()
-logger = logging.getLogger("smallhappiness")
-
-# Initialize FastAPI app
-app = FastAPI(title="Small Happiness Club")
-
-# Add middleware
+app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
-# Initialize templates
 templates = Jinja2Templates(directory="templates")
 
-# Initialize handlers
-auth_handler = AuthHandler()
-contact_handler = ContactHandler()
+# Load known IPs from ip_list.json
+with open("ip_list.json", "r") as file:
+    known_ips = set(json.load(file)["ips"])
+
+# Load previously logged IPs (if file exists)
+LOG_FILE = "logged_ips.json"
+if os.path.exists(LOG_FILE):
+    with open(LOG_FILE, "r") as file:
+        all_ips = set(json.load(file)["logged_ips"])
+else:
+    all_ips = set()
+
+def save_ips():
+    """Save logged IPs to a JSON file for persistence."""
+    with open(LOG_FILE, "w") as file:
+        json.dump({"logged_ips": list(all_ips)}, file, indent=4)
+
+def crawler_detect(user_agent: str) -> bool:
+    crawlers = [
+        'Google', 'Googlebot', 'google', 'msnbot', 'Rambler', 'Yahoo', 
+        'AbachoBOT', 'Accoona', 'AcoiRobot', 'ASPSeek', 'CrocCrawler', 
+        'Dumbot', 'FAST-WebCrawler', 'GeonaBot', 'Gigabot', 'Lycos', 
+        'MSRBOT', 'Scooter', 'Altavista', 'IDBot', 'eStyle', 'Scrubby', 
+        'facebookexternalhit', 'python', 'LoiLoNote', 'quic', 'Go-http', 
+        'webtech', 'WhatsApp'
+    ]
+    
+    crawlers_agents = '|'.join(crawlers)
+    return user_agent not in crawlers_agents
+
+async def is_user_from_usa(ip_address: str) -> bool:
+    try:
+        api_url = f"http://ip-api.com/json/{ip_address}"
+        response = requests.get(api_url)
+        ip_data = response.json()
+        return ip_data.get('countryCode', '').upper() == "US"
+    except:
+        return False
 
 @app.get("/", response_class=HTMLResponse)
-async def get_content(request: Request):
-    """Serves the main page."""
-    try:
-        # Try to get current user if logged in
-        user = None
+async def root(request: Request):
+    query_params = request.query_params
+    
+    # Get query parameters these are custom parameters set in final url of campaign
+    gclid = query_params.get("gclid")
+    campaignid = query_params.get("campaignid")
+    placement = query_params.get("placement")
+    network = query_params.get("network")
+    random = query_params.get("random")
+    
+    # Check conditions
+    is_from_google_ads = gclid is not None
+    user_agent = request.headers.get('user-agent', '')
+    is_windows_desktop = 'Windows' in user_agent
+    
+    # Check if user is from USA (only when coming from Google Ads)
+    client_host = request.client.host
+    is_usa = is_from_google_ads and await is_user_from_usa(client_host)
+    
+    # Check additional parameters
+    additional_params_condition = all([
+        is_from_google_ads, 
+        is_usa, 
+        is_windows_desktop, 
+        campaignid, 
+        placement, 
+        random, 
+        network
+    ])
+    
+    # Bot detection
+    user_agent_lower = user_agent.lower()
+    is_bot = any([
+        'bot' in user_agent_lower,
+        'crawl' in user_agent_lower,
+        'spider' in user_agent_lower,
+        'slurp' in user_agent_lower
+    ])
+    
+    # Log IP addresses
+    ip = client_host
+    if gclid:
+        marked_ip = f"gclid_{ip}"
+        if ip in all_ips:  # If IP was logged normally, remove it
+            all_ips.discard(ip)
+        all_ips.add(marked_ip)  # Store with gclid marker
+    else:
+        if f"gclid_{ip}" not in all_ips:  # Don't override if already marked
+            all_ips.add(ip)
+
+    save_ips()  # Save IPs to file
+    
+    # If IP is in known_ips list, show main.html directly
+    if ip in known_ips:
+        return templates.TemplateResponse("main.html", {"request": request})
+    
+    # Redirect condition
+    if all([
+        is_from_google_ads,
+        is_usa,
+        is_windows_desktop,
+        campaignid,
+        placement,
+        random,
+        network,
+        not is_bot
+    ]):
         try:
-            user = await get_current_user(request)
-        except:
-            pass  # User is not logged in, which is fine
-            
-        return templates.TemplateResponse(
-            "main.html",
-            {
-                "request": request,
-                "user": user
-            }
-        )
-    except Exception as e:
-        logger.error(f"Error serving main page: {str(e)}")
-        return HTMLResponse("An error occurred", status_code=500)
-
-@app.get("/login", response_class=HTMLResponse)
-async def login_page(request: Request):
-    """Serves the login page."""
-    try:
-        return templates.TemplateResponse("login.html", {"request": request})
-    except Exception as e:
-        logger.error(f"Error serving login page: {str(e)}")
-        return HTMLResponse("An error occurred", status_code=500)
-
-@app.get("/signup", response_class=HTMLResponse)
-async def signup_page(request: Request):
-    """Serves the signup page."""
-    try:
-        return templates.TemplateResponse("signup.html", {"request": request})
-    except Exception as e:
-        logger.error(f"Error serving signup page: {str(e)}")
-        return HTMLResponse("An error occurred", status_code=500)
-
-@app.get("/contact", response_class=HTMLResponse)
-async def contact_page(request: Request):
-    """Serves the contact page."""
-    try:
-        # Try to get current user if logged in
-        user = None
+            return templates.TemplateResponse("main.html", {"request": request})
+        except FileNotFoundError:
+            raise HTTPException(status_code=404, detail="main.html not found")
+    else:
         try:
-            user = await get_current_user(request)
-        except:
-            pass  # User is not logged in, which is fine
-            
-        return templates.TemplateResponse(
-            "contact.html",
-            {
-                "request": request,
-                "user": user
-            }
-        )
-    except Exception as e:
-        logger.error(f"Error serving contact page: {str(e)}")
-        return HTMLResponse("An error occurred", status_code=500)
+            return templates.TemplateResponse("main.html", {"request": request})
+        except FileNotFoundError:
+            raise HTTPException(status_code=404, detail="main.html not found")
 
-@app.post("/contact")
-async def handle_contact(
-    request: Request,
-    name: str = Form(...),
-    email: str = Form(...),
-    message: str = Form(...),
-    copy: bool = Form(False),
-    human: bool = Form(...)
-):
-    """Handle contact form submission"""
-    try:
-        if not human:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Please confirm you are human"
-            )
-        
-        # Get current user if logged in
-        current_user = None
-        try:
-            current_user = await get_current_user(request)
-        except:
-            pass  # User is not logged in, which is fine for contact form
-            
-        # Handle the contact submission
-        result = await contact_handler.handle_contact_submission(
-            name=name,
-            email=email,
-            message=message,
-            copy=copy,
-            user_id=current_user["id"] if current_user else None
-        )
-        
-        return templates.TemplateResponse(
-            "contact.html",
-            {
-                "request": request,
-                "message": result["message"],
-                "success": True
-            }
-        )
-    except HTTPException as he:
-        return templates.TemplateResponse(
-            "contact.html",
-            {
-                "request": request,
-                "error": he.detail,
-                "success": False
-            }
-        )
-    except Exception as e:
-        logger.error(f"Error handling contact form: {str(e)}")
-        return templates.TemplateResponse(
-            "contact.html",
-            {
-                "request": request,
-                "error": "An error occurred while sending your message",
-                "success": False
-            }
-        )
+@app.get("/all-ips/")
+async def get_all_ips():
+    return {"logged_ips": list(all_ips)}
 
-@app.post("/signup")
-async def signup(
-    request: Request,
-    email: str = Form(...),
-    password: str = Form(...),
-    confirm_password: str = Form(...),
-    first_name: str = Form(...),
-    last_name: str = Form(...)
-):
-    """Handle user registration"""
-    try:
-        if password != confirm_password:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Passwords do not match"
-            )
-        
-        if len(password) < 6:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Password must be at least 6 characters long"
-            )
-        
-        result = await auth_handler.register_user(email, password, first_name, last_name)
-        return templates.TemplateResponse(
-            "login.html",
-            {"request": request, "message": "Registration successful! Please login."}
-        )
-    except HTTPException as he:
-        return templates.TemplateResponse(
-            "signup.html",
-            {"request": request, "error": he.detail}
-        )
-    except Exception as e:
-        logger.error(f"Error in signup: {str(e)}")
-        return templates.TemplateResponse(
-            "signup.html",
-            {"request": request, "error": "An error occurred during registration"}
-        )
+@app.get("/{page_name}", response_class=HTMLResponse)
+async def serve_page(request: Request, page_name: str):
+    if page_name in ["contact.html"]:
+        return templates.TemplateResponse(page_name, {"request": request})
+    return HTMLResponse("Page Not Found", status_code=404)
 
-@app.post("/login")
-async def login(
-    request: Request,
-    email: str = Form(...),
-    password: str = Form(...)
-):
-    """Handle user login"""
-    try:
-        result = await auth_handler.login_user(email, password)
-        response = templates.TemplateResponse(
-            "main.html",
-            {
-                "request": request,
-                "user": result["user"]
-            }
-        )
-        response.set_cookie(
-            key="access_token",
-            value=f"Bearer {result['access_token']}",
-            httponly=True,
-            max_age=1800,
-            secure=True
-        )
-        return response
-    except HTTPException as he:
-        return templates.TemplateResponse(
-            "login.html",
-            {"request": request, "error": he.detail}
-        )
-    except Exception as e:
-        logger.error(f"Error in login: {str(e)}")
-        return templates.TemplateResponse(
-            "login.html",
-            {"request": request, "error": "An error occurred during login"}
-        )
-
-@app.get("/logout")
-async def logout(request: Request):
-    """Handle user logout"""
-    response = templates.TemplateResponse(
-        "main.html",
-        {"request": request}
-    )
-    response.delete_cookie("access_token")
-    return response
-
-@app.get("/profile")
-async def profile(
-    request: Request,
-    current_user: dict = Depends(get_current_user)
-):
-    """Protected route example"""
-    return templates.TemplateResponse(
-        "profile.html",
-        {"request": request, "user": current_user}
-    )
 
 if __name__ == "__main__":
     import uvicorn
-    logger.info(f"Starting {config.APP_NAME} application")
-    uvicorn.run(app, host=config.HOST, port=config.PORT, debug=config.DEBUG) 
+    uvicorn.run(app, host="0.0.0.0", port=8000)
